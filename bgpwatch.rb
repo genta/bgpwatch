@@ -3,13 +3,13 @@
 
 require 'pp'
 
-# Notify BGP status to another network service
-class Notifier
-end
+# Notifier bridge class
+module Notifier
+  # IRC Client. Client class of Notifier
+  class IRCClient
+  end # Notifier::IRCClient
+end # Notifier
 
-# IRC Client
-class IRCClient
-end
 
 # connect to Quagga/Zebra vty, and fetch peer status
 class PeerWatcher
@@ -33,6 +33,9 @@ end
 
 # Real instance to work.
 class BGPWatch < BGPWatchStub
+  notifier IRCClient, {:server => 'irc.reicha.net:6667', 
+                       :nick => 'ihanetbot'}
+  watcher {:server => 'localhost'}
 end
 
 pp BGPWatch.new.run

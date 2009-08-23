@@ -20,12 +20,19 @@ class PeerWatcher
   end
 end
 
-# BGPWatcher main class. Source of meta-programming.
+# BGPWatcher main class. The source of the meta-programming.
 class BGPWatchStub
   def initialize
   end
 
   def run
+  end
+
+  def notifier(param)
+    param = {:class => IRCClient}.merge(param)
+  end
+
+  def watcher(param)
   end
 end
 
@@ -33,9 +40,10 @@ end
 
 # Real instance to work.
 class BGPWatch < BGPWatchStub
-  notifier IRCClient, {:server => 'irc.reicha.net:6667', 
-                       :nick => 'ihanetbot'}
-  watcher {:server => 'localhost'}
+  notifier :class => IRCClient, 
+           :server => 'irc.reicha.net:6667', 
+           :nick => 'ihanetbot'
+  watcher  :server => 'localhost'
 end
 
 pp BGPWatch.new.run

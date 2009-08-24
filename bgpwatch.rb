@@ -2,6 +2,7 @@
 # $Id$
 
 require 'pp'
+require 'metaid'
 
 # Notifier bridge class
 module Notifier
@@ -29,10 +30,12 @@ class BGPWatchStub
   end
 
   def notifier(param)
-    param = {:class => IRCClient}.merge(param)
+    # クラスのインスタンス変数に，paramを保存しておく．
+    param = {:class => IRCClient}.merge(param) # broken
   end
 
   def watcher(param)
+    # クラスのインスタンス変数に，paramを保存しておく．
   end
 end
 

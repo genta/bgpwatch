@@ -29,13 +29,26 @@ class BGPWatchStub
   def run
   end
 
-  def notifier(param)
+  # クラスのインスタンス変数へのアクセサメソッド
+  # メタ化できそうだ
+  def self.notifier(param)
+    return @notifier if param.empty?
+    
     # クラスのインスタンス変数に，paramを保存しておく．
-    param = {:class => IRCClient}.merge(param) # broken
+    # そこしか使えないからな．
+    @notifier ||= {}
+    @notifier = {:class => IRCClient}.merge(param)
   end
 
-  def watcher(param)
+  # クラスのインスタンス変数へのアクセサメソッド
+  # メタ化できそうだ
+  def self.watcher(param)
+    return @watcher if param.empty?
+
     # クラスのインスタンス変数に，paramを保存しておく．
+    # そこしか使えないからな．
+    @watcher ||= {}
+    @watcher = {}.merge(param)
   end
 end
 

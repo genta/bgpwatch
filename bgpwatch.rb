@@ -21,6 +21,12 @@ class PeerWatcher
   end
 end
 
+# store peer status permernently
+class Storage
+  def initialize
+  end
+end
+
 # BGPWatcher main class. The source of the meta-programming.
 class BGPWatchStub
   def initialize
@@ -77,11 +83,24 @@ end
 
 
 # Real instance to work.
+class MyNotifier < Notifier::IRCClient
+  server 'irc.reicha.net'
+  port 6667
+  nick 'ihanetbot'
+end
+
+class Watcher < PeerWatcher
+  server 'localhost'
+end
+
+class MyStorage < Storage
+  file '/tmp/mystorage.db'
+end
+
 class BGPWatch < BGPWatchStub
-  notifier :class => Notifier::IRCClient, 
-           :server => 'irc.reicha.net:6667', 
-           :nick => 'ihanetbot'
-  watcher  :server => 'localhost'
+  notifier MyNotifier
+  watcher  MyWatcher
+  storage  MyStorage
 end
 
 pp BGPWatch.new.run

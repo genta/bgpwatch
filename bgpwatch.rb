@@ -4,22 +4,20 @@
 require 'pp'
 require 'metaid'
 
-# Notifier bridge class
+# Notifier bridge module
 module Notifier
   # IRC Client. Client class of Notifier
   class IRCClient
   end # Notifier::IRCClient
 end # Notifier
 
-
-# connect to Quagga/Zebra vty, and fetch peer status
-class PeerWatcher
-  def initialize
-  end
-
-  def get
-  end
-end
+# Peer status watcher module
+module Watcher
+  # connect to Quagga/Zebra vty, and fetch peer status
+  class Quagga
+    def initialize
+  end # Watcher::Quagga
+end # Watcher
 
 # store peer status permernently
 class Storage
@@ -28,7 +26,7 @@ class Storage
 end
 
 # BGPWatcher main class. The source of the meta-programming.
-class BGPWatchStub
+class BGPWatch
   def initialize
     @notifier = self.class.notifier
     @watcher = self.class.watcher
@@ -89,18 +87,19 @@ class MyNotifier < Notifier::IRCClient
   nick 'ihanetbot'
 end
 
-class Watcher < PeerWatcher
-  server 'localhost'
-end
-
 class MyStorage < Storage
   file '/tmp/mystorage.db'
 end
 
-class BGPWatch < BGPWatchStub
-  notifier MyNotifier
-  watcher  MyWatcher
-  storage  MyStorage
+class MyWatcher < Watcher::Quagga
+  server 'localhost'
+  storage MyStorage.new
 end
 
-pp BGPWatch.new.run
+
+class MyBGPWatch < BGPWatch
+  notifier MyNotifier.new
+  watcher  MyWatcher.new
+end
+
+pp MyBGPWatch.new.run

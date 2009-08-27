@@ -21,23 +21,18 @@ module Storage
 
     # open from file and restore datas.
     def open
-      puts "FileStorage: opened."
       @current = YAML.load_file(@file) rescue PeerStatus.new
-      # puts 'restored ==>'
-      # @current.dump
-      # puts '<=='
     end
 
     # store data into file.
     def flush
       puts "FileStorage: flushed"
-      YAML.dump(@current, File.open(@file, 'w'))
+      File.open(@file, 'w') {|fd| YAML.dump(@current, fd) }
     end
 
     # store data into file, and close.
     def close
       flush
-      puts "FileStorage: closed."
     end
 
     def run

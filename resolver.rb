@@ -36,8 +36,7 @@ class Resolver
   end
 
   def flush
-    # YAML.dump(self, File::open(@file, 'w'))
-    puts "flushed"
+    File::open(@file, 'w') {|fd| YAML.dump(self, fd) }
   end
 
   def close
@@ -53,14 +52,3 @@ class Resolver
   end
 end
 __END__
-
-class MyResolver < Resolver
-  file '/home/genta/asnum.txt'
-  readonly
-end
-
-resolv = MyResolver.new
-pp resolv
-resolv.run
-pp resolv
-resolv.shutdown

@@ -1,3 +1,6 @@
+require 'rubygems'
+require 'metaid'
+
 #
 # Attribute module. The source of the meta-programming.
 #

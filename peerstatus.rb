@@ -32,6 +32,12 @@ class PeerStatus < Hash
     end
     return result
   end
+
+  def dump
+    self.each do |ipaddr, entry|
+      puts "%-30s %6d %10s %10s" % entry.to_a
+    end
+  end
 end
 __END__
 

@@ -11,6 +11,7 @@ require 'peerstatus'
 require 'notifier'
 require 'watcher'
 require 'storage'
+require 'resolver'
 
 DEBUG = true
 
@@ -42,7 +43,7 @@ class BGPWatch
   # returns: never return.
   def run
     daemonize
-    [@notifier, @watcher].each {|process| process.run}
+    [@notifier, @watcher].each {|process| process.run} # XXX
 
     loop do
       if (result = check) then
@@ -79,20 +80,36 @@ class MyWatcher < Watcher::Quagga
   server 'localhost'
   user 'login'
   password 'password'
+  enable_password 'enable'
 end
 
+=begin
 Myresolver = {
   64512 => 'genta',
   64513 => 'genta',
   64514 => 'mmasuda',
   64520 => 'ume',
+  64527 => 'yugmix-home',
+  64528 => 'kojima',
+  64529 => 'nabeken-osaka',
   64530 => 'nork',
 }
+#### YAML.dump(Myresolver, File::open('/home/genta/asnum.txt', 'w'))
+=end
+MyResolver = YAML.load_file('/home/genta/asnum.txt')
+MyResolver.extend Runnable
+
+=begin
+class MyResolver < Resolver
+  file '/home/genta/asnum.txt'
+end
+=end
 
 class MyWatchManager < Watcher::Manager
   watcher MyWatcher
   storage MyStorage
-  resolver Myresolver
+  # resolver Myresolver
+  resolver MyResolver
 end
 
 class MyBGPWatch < BGPWatch

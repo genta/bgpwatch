@@ -1,3 +1,5 @@
+require 'net/telnet'
+
 #
 # Peer status watcher module
 # 
@@ -7,18 +9,64 @@ module Watcher
   #
   class Quagga
     extend Attributes
-    attributes :server, :user, :password
+    attributes :server, :user, :password, :enable_password
     include Runnable
 
+    attr :vty
+
     def execute(cmd)
-      return "(my result\n)"
+      @vty = Net::Telnet.new('Host' => @server,
+                             'Prompt' => /[#>] \z/n,
+                             'Port' => 2605)
+      @vty.waitfor(/^Password:/)
+      @vty.cmd(@password)
+      if (@enable_password) then
+        @vty.cmd('String' => 'enable', 'Match' => /^Password:/)
+        @vty.cmd(@enable_password)
+      end
+
+      @vty.cmd('terminal length 0')
+
+      result = ""
+      @vty.cmd(cmd) {|c| result << c }
+      result.sub!(/^#{cmd}\n/o, '')
+
+      @vty.cmd('quit')
+      @vty.close
+
+      return result
     end
 
     def get_peers
-      a = PeerStatus.new
-      a << PeerStatus::Entry.new('fe80::nork:1', 64530, 'Down', '00:00:01')
-      a << PeerStatus::Entry.new('fe80::ume:1', 64520, 'Up', '00:00:15')
-      return(a)
+      vty_out = execute('show ipv6 bgp summary')
+      content = ""
+      skipped = false
+      vty_out.each do |line|
+        next if !skipped and /^Neighbor/ !~ line
+        break if skipped and /^$/ =~ line
+        skipped = true
+        content << line
+      end
+      content.sub!(/^Neighbor.*\n/, '')
+      content.gsub!(/^([a-fA-F0-9:.]+)\n/, '\1 ')
+
+      peers = PeerStatus.new
+      content.split("\n").each do |line|
+        cols = line.split(/\s+/)
+        entry = PeerStatus::Entry.new
+
+        entry.ipaddr, entry.asnum, entry.status, entry.since_last_event =
+          cols[0], cols[2].to_i, cols[9], cols[8]
+        if entry.status =~ /^\d+$/ then
+          entry.status = 'Up'
+        else
+          entry.status = 'Down'
+        end
+
+        peers << entry
+      end
+
+      return peers
     end
   end # Watcher::Quagga
 
@@ -44,6 +92,7 @@ module Watcher
       last = @storage.current
       result = get_peers
       @storage.current = result
+      @storage.flush
 
       diff = result.diff(last)
       if !diff.empty? then
@@ -56,6 +105,14 @@ module Watcher
         }
       end
       return nil
+    end
+
+    def run
+      [@watcher, @storage, @resolver].each {|mod| mod.run } # XXX
+    end
+
+    def shutdown
+      [@watcher, @storage, @resolver].each {|mod| mod.shutdown } # XXX
     end
   end
 end # Watcher

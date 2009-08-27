@@ -2,25 +2,16 @@
 # store peer status permernently
 #
 module Storage
-  class BasicStorage < Hash
+  class BasicStorage
     include Runnable
+    attr_accessor :current
 
-    # open: do nothing
+    # open: do nothing. override needed.
     def open
     end
 
-    # close: do nothing
+    # close: do nothing. override needed.
     def close
-    end
-
-    def current
-      a = PeerStatus.new
-      a << PeerStatus::Entry.new('fe80::nork:1', 64530, 'Up', '00:00:01')
-      a << PeerStatus::Entry.new('fe80::ume:1', 64520, 'Up', '00:00:15')
-    end
-
-    def current=(other)
-      other
     end
   end
 
@@ -31,17 +22,26 @@ module Storage
     # open from file and restore datas.
     def open
       puts "FileStorage: opened."
+      @current = YAML.load_file(@file) rescue PeerStatus.new
+      # puts 'restored ==>'
+      # @current.dump
+      # puts '<=='
     end
 
     # store data into file.
     def flush
       puts "FileStorage: flushed"
+      YAML.dump(@current, File.open(@file, 'w'))
     end
 
     # store data into file, and close.
     def close
       flush
       puts "FileStorage: closed."
+    end
+
+    def run
+      open
     end
 
     def shutdown

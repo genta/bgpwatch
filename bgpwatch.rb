@@ -68,8 +68,9 @@ class MyNotifier < Notifier::IRCClient
   server 'irc6.ii-okinawa.ne.jp'
   port 6667
   nick 'peerbot'
-  realname 'IHA *ihanetbot* genta (http://www.ihanet.info/)'
-  channel '#mera'
+  realname 'IHANet BGP peer status watcher (http://www.ihanet.info/)'
+  # channel '#mera'
+  channel '#ihanet'
   charcode Kconv::JIS # Kconv::AUTO, Kconv::UTF8, Kconv::SJIS, etc.
 end
 

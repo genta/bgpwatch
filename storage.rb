@@ -26,7 +26,6 @@ module Storage
 
     # store data into file.
     def flush
-      puts "FileStorage: flushed"
       File.open(@file, 'w') {|fd| YAML.dump(@current, fd) }
     end
 

@@ -99,7 +99,7 @@ module Watcher
         return diff.map {|entry|
           nick = @resolver[entry.asnum] 
           if nick then nick = " a.k.a. #{nick}" end
-          "Status has been changed: " +
+          "Peer status has been changed: " +
             "#{last[entry.ipaddr].status} -> #{entry.status} " +
             "(#{entry.ipaddr}, AS#{entry.asnum}#{nick})"
         }

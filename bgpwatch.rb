@@ -13,6 +13,8 @@ require 'watcher'
 require 'storage'
 require 'resolver'
 
+$DEBUG = true
+
 
 #
 # BGPWatcher main class.
@@ -53,8 +55,22 @@ class BGPWatch
 
   private
   # daemonize myself.
-  def daemonize
-    puts "(daemonize!)"
+  def daemonize(foreground=false)
+    trap("SIGINT")  { exit! 0 } 
+    trap("SIGTERM") { exit! 0 } 
+    trap("SIGHUP")  { exit! 0 } 
+    return yield if $DEBUG || foreground
+    Process.fork do
+      Process.setsid
+      Dir.chdir "/" 
+      File.open("/dev/null") {|f|
+        STDIN.reopen  f
+        STDOUT.reopen f
+        STDERR.reopen f
+      }   
+      yield
+    end 
+    exit! 0
   end
 end
 
@@ -100,5 +116,4 @@ class MyBGPWatch < BGPWatch
   watcher MyWatchManager
 end
 
-bgpwatcher = MyBGPWatch.new
-pp bgpwatcher.run
+MyBGPWatch.new.run

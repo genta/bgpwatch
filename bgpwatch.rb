@@ -13,8 +13,6 @@ require 'watcher'
 require 'storage'
 require 'resolver'
 
-DEBUG = true
-
 
 #
 # BGPWatcher main class.
@@ -36,17 +34,17 @@ class BGPWatch
   # receives: Array of messages.
   # returns: nil
   def notify(msg)
-    msg.each {|message| @notifier.notify(message)}
+    msg.each {|message| @notifier.notify(message) }
   end
 
   # start watching.
   # returns: never return.
   def run
     daemonize
-    [@notifier, @watcher].each {|process| process.run} # XXX
+    [@notifier, @watcher].each {|process| process.run } # XXX
 
     loop do
-      if (result = check) then
+      if (result = check()) then
         notify(result)
       end
       sleep 60
@@ -56,7 +54,7 @@ class BGPWatch
   private
   # daemonize myself.
   def daemonize
-    puts "(daemonize!)" if DEBUG
+    puts "(daemonize!)"
   end
 end
 
@@ -67,9 +65,12 @@ end
 # 
 
 class MyNotifier < Notifier::IRCClient
-  server 'irc.reicha.net'
+  server 'irc6.ii-okinawa.ne.jp'
   port 6667
-  nick 'ihanetbot'
+  nick 'peerbot'
+  realname 'IHA *ihanetbot* genta (http://www.ihanet.info/)'
+  channel '#mera'
+  charcode Kconv::JIS # Kconv::AUTO, Kconv::UTF8, Kconv::SJIS, etc.
 end
 
 class MyStorage < Storage::FileStorage

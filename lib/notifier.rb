@@ -30,6 +30,8 @@ module Notifier
 
     def initialize(*args)
       super
+      @channel = @opts.channel if !@opts.channel.nil?
+      @msgq = @opts.msgq if !@opts.msgq.nil?
     end
 
     def on_idle
@@ -45,47 +47,6 @@ module Notifier
     def on_privmsg(m)
       channel = m[0]
     end
-
-=begin
-    # (from Net::IRC::Client)
-    # Connect to server and event loop.
-    def start
-      # reset config
-      @server_config = Message::ServerConfig.new
-      @socket = TCPSocket.open(@host, @port)
-      on_connected
-      post PASS, @opts.pass if @opts.pass
-      post NICK, @opts.nick
-      post USER, @opts.user, "0", "*", @opts.real
-      while true
-        r = select([@socket], [], [], 1)
-        if r.nil? then
-          send(:on_idle) if respond_to?(:on_idle)
-          next
-        elsif @socket.eof? then
-          break
-        end
-        l = @socket.gets
-        
-        begin
-          @log.debug "RECEIVE: #{l.chomp}"
-          m = Message.parse(l)
-          next if on_message(m) === true
-          name = "on_#{(COMMANDS[m.command.upcase] || m.command).downcase}"
-          send(name, m) if respond_to?(name)
-        rescue Exception => e
-          warn e
-          warn e.backtrace.join("\r\t")
-          raise
-        rescue Message::InvalidMessage
-          @log.error "MessageParse: " + l.inspect
-        end
-      end
-    rescue IOError
-    ensure
-      finish
-    end
-=end
   end # IRCClient::Client
   
   #
@@ -101,10 +62,12 @@ module Notifier
       @client = Client.new(@server, @port, {
         :nick => @nick,
         :user => @nick,
-        :real => @realname || @nick
+        :real => @realname || @nick,
+        :channel => @channel,
+        :msgq => @msgq = Queue.new
       })
-      @client.channel = @channel
-      @client.msgq = @msgq = Queue.new
+      # @client.channel = @channel
+      # @client.msgq = @msgq = Queue.new
 
       # <XXX>
       @client.meta_def(:charconv_in) do |str|

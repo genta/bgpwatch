@@ -14,29 +14,6 @@ module Watcher
 
     attr :vty
 
-    def execute(cmd)
-      @vty = Net::Telnet.new('Host' => @server,
-                             'Prompt' => /[#>] \z/n,
-                             'Port' => 2605)
-      @vty.waitfor(/^Password:/)
-      @vty.cmd(@password)
-      if (@enable_password) then
-        @vty.cmd('String' => 'enable', 'Match' => /^Password:/)
-        @vty.cmd(@enable_password)
-      end
-
-      @vty.cmd('terminal length 0')
-
-      result = ""
-      @vty.cmd(cmd) {|c| result << c }
-      result.sub!(/^#{cmd}\n/o, '')
-
-      @vty.cmd('quit')
-      @vty.close
-
-      return result
-    end
-
     def get_peers
       vty_out = execute('show ipv6 bgp summary')
       content = ""
@@ -68,6 +45,30 @@ module Watcher
 
       return peers
     end
+
+    private
+    def execute(cmd)
+      @vty = Net::Telnet.new('Host' => @server,
+                             'Prompt' => /[#>] \z/n,
+                             'Port' => 2605)
+      @vty.waitfor(/^Password:/)
+      @vty.cmd(@password)
+      if (@enable_password) then
+        @vty.cmd('String' => 'enable', 'Match' => /^Password:/)
+        @vty.cmd(@enable_password)
+      end
+
+      @vty.cmd('terminal length 0')
+
+      result = ""
+      @vty.cmd(cmd) {|c| result << c }
+      result.sub!(/^#{cmd}\n/o, '')
+
+      @vty.cmd('quit')
+      @vty.close
+
+      return result
+    end
   end # Watcher::Quagga
 
   #
@@ -77,12 +78,6 @@ module Watcher
     extend Attributes
     attributes :watcher, :storage, :resolver
     include Runnable
-
-    # get 'show ipv6 bgp' result.
-    # returns: Array
-    def get_peers
-      @watcher.get_peers
-    end
 
     # check events.
     # retruns:
@@ -113,6 +108,13 @@ module Watcher
 
     def shutdown
       [@watcher, @storage, @resolver].each {|mod| mod.shutdown } # XXX
+    end
+
+    private
+    # get 'show ipv6 bgp' result.
+    # returns: Array
+    def get_peers
+      @watcher.get_peers
     end
   end
 end # Watcher

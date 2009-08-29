@@ -42,23 +42,29 @@ class BGPWatch
   # start watching.
   # returns: never return.
   def run
-    daemonize
-    [@notifier, @watcher].each {|process| process.run } # XXX
+    daemonize do
+      [@notifier, @watcher].each {|process| process.run } # XXX
 
-    loop do
-      if (result = check()) then
-        notify(result)
+      loop do
+        if (result = check()) then
+          notify(result)
+        end
+        sleep 60
       end
-      sleep 60
     end
+  end
+
+  def shutdown
+    [@notifier, @watcher].each {|process| process.shutdown } # XXX
+    exit! 0
   end
 
   private
   # daemonize myself.
-  def daemonize(foreground=false)
-    trap("SIGINT")  { exit! 0 } 
-    trap("SIGTERM") { exit! 0 } 
-    trap("SIGHUP")  { exit! 0 } 
+  def daemonize(foreground = false)
+    ['SIGINT', 'SIGTERM', 'SIGHUP'].each do |sig|
+      Signal.trap(sig) { shutdown }
+    end
     return yield if $DEBUG || foreground
     Process.fork do
       Process.setsid
@@ -76,6 +82,7 @@ end
 
 
 
+if __FILE__ == $0 then
 #
 # Real instances to work.
 # 
@@ -117,3 +124,4 @@ class MyBGPWatch < BGPWatch
 end
 
 MyBGPWatch.new.run
+end

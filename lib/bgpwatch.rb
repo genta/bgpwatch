@@ -13,8 +13,6 @@ require 'watcher'
 require 'storage'
 require 'resolver'
 
-$DEBUG = true
-
 
 #
 # BGPWatcher main class.
@@ -60,7 +58,7 @@ class BGPWatch
   end
 
   private
-  # daemonize myself.
+  # daemonize process and execute given block.
   def daemonize(foreground = false)
     ['SIGINT', 'SIGTERM', 'SIGHUP'].each do |sig|
       Signal.trap(sig) { shutdown }
@@ -78,50 +76,4 @@ class BGPWatch
     end 
     exit! 0
   end
-end
-
-
-
-if __FILE__ == $0 then
-#
-# Real instances to work.
-# 
-
-class MyNotifier < Notifier::IRCClient
-  server 'irc6.ii-okinawa.ne.jp'
-  port 6667
-  nick 'peerbot'
-  realname 'IHANet BGP peer status watcher (http://www.ihanet.info/)'
-  # channel '#mera'
-  channel '#ihanet'
-  charcode Kconv::JIS # Kconv::AUTO, Kconv::UTF8, Kconv::SJIS, etc.
-end
-
-class MyStorage < Storage::FileStorage
-  file '/tmp/mystorage.db'
-end
-
-class MyWatcher < Watcher::Quagga
-  server 'localhost'
-  user 'login'
-  password 'password'
-  enable_password 'enable'
-end
-
-class MyResolver < Resolver
-  file '/home/genta/asnum.txt'
-end
-
-class MyWatchManager < Watcher::Manager
-  watcher MyWatcher
-  storage MyStorage
-  resolver MyResolver
-end
-
-class MyBGPWatch < BGPWatch
-  notifier MyNotifier
-  watcher MyWatchManager
-end
-
-MyBGPWatch.new.run
 end

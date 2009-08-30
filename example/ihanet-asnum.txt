@@ -1,0 +1,30 @@
+# IHANet AS numbers (http://www.ihanet.info/)
+---
+64520: ume
+64531: nemoto
+64515: qedqedqed
+64526: nabeken-tokyo
+64537: yugmix-bgp-confed.
+65516: jp.freebsd.org
+64521: takawata
+64532: mani
+64516: hrs
+64527: yugmix-home
+64538: hrs
+65517: nyan
+64533: hrs
+64517: yugmix-l3ix
+64528: kojima
+64539: mimuret
+64512: genta
+64523: lonz
+64518: karl
+64529: nabeken-osaka
+64513: genta
+64524: kinoSi
+64535: nunnun
+64519: karl
+64530: nork
+64514: mmasuda
+64525: tomocha
+64536: tatsuya

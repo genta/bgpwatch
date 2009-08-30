@@ -1,4 +1,5 @@
 #!/usr/local/bin/ruby
+# coding: UTF-8
 require 'rubygems'
 require 'net/irc'
 require 'kconv'
@@ -26,6 +27,7 @@ module Notifier
   # 
   class IRCClient::Client < Net::IRC::Client
     attr_accessor :channel, :msgq
+    attr_accessor :owner
 
     def initialize(*args)
       super
@@ -44,7 +46,35 @@ module Notifier
     end
 
     def on_privmsg(m)
-      channel, message = m
+      channel, message = m.to_a
+      nick = m.prefix.nick
+
+      return unless channel == @channel
+      return unless /peerbot/ =~ message
+
+      result = []
+      rest = message.dup
+      rest.gsub!(/AS(\d+)/i) do |s|
+        asn = $1.to_i
+        if resolver.has_key?(asn) then
+          result.push "#{s.upcase}: #{resolver[asn]}"
+        end
+        ''
+      end
+      if !result.empty? then
+        post NOTICE, @channel, result.join(', ')
+      end
+    rescue
+    end
+
+    def on_disconnected
+    end
+
+    private
+
+    def resolver
+      @owner.resolver
+      # { 64512 => 'mera-chan' }
     end
   end # IRCClient::Client
   
@@ -55,6 +85,7 @@ module Notifier
     extend Attributes
     attributes :server, :port, :nick, :realname, :channel, :charcode
     attr_reader :client, :thread, :msgq
+    attr_accessor :owner
 
     def initialize
       init_attributes
@@ -65,8 +96,7 @@ module Notifier
         :channel => @channel,
         :msgq => @msgq = Queue.new
       })
-      # @client.channel = @channel
-      # @client.msgq = @msgq = Queue.new
+      @client.owner = self if @client.respond_to? :owner=
 
       # <XXX>
       @client.meta_def(:charconv_in) do |str|
@@ -90,6 +120,10 @@ module Notifier
 
     def notify(msg)
       @msgq << msg
+    end
+
+    def resolver
+      @owner.resolver
     end
   end # Notifier::IRCClient
 end # Notifier

@@ -3,5 +3,6 @@
 This software depends these sofwares:
 
   - rubygems
-  - gem packages as follows:
+  - gem packages:
     - metaid
+    - net-irc

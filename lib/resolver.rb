@@ -13,7 +13,7 @@ class Resolver
 
   attributes :file
   attr_accessor :obj
-  def_delegators :@obj, :[], :[]=
+  def_delegators :@obj, :[], :[]=, :has_key?
 
   def self.readonly
     class_def(:flush) do 

@@ -14,7 +14,7 @@ module Attributes
       meta_def(attr_name) do |value|
         traversally_new = lambda {|item|
           if item.is_a?(Array) then
-            return item.map {|val| traversally_new.call(val)}
+            return item.map {|val| traversally_new.call(val) }
           else
             return item.is_a?(Class) ? item.new : item
           end
@@ -32,6 +32,7 @@ module Attributes
     class_def(:init_attributes) do
       self.class.attributes.each do |key, value|
         instance_variable_set("@#{key}", value)
+        value.owner = self if value.respond_to?(:owner=)
       end
     end
   end
@@ -39,8 +40,29 @@ end
 
 module Runnable
   def run
+    run_attributes
   end
 
   def shutdown
+    shutdown_attributes
+  end
+
+  private
+
+  def send_attributes(*message)
+    method, *args = message
+    self.class.attributes.each do |name, obj|
+      obj.send(*message) if obj.respond_to? method
+    end
+  end
+
+  def run_attributes
+    return unless self.class.respond_to? :attributes
+    send_attributes(:run)
+  end
+
+  def shutdown_attributes
+    return unless self.class.respond_to? :attributes
+    send_attributes(:shutdown)
   end
 end

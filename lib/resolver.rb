@@ -1,6 +1,5 @@
 #!/usr/local/bin/ruby
-require 'rubygems'
-require 'pp'
+# $Id$
 require 'modules'
 require 'forwardable'
 
@@ -18,7 +17,7 @@ class Resolver
 
   def self.readonly
     class_def(:flush) do 
-      raise RuntimeError, "Forbidden: Resolver marked as readonly."
+      puts "WARNING: Resolver marked as readonly."
     end
   end
 
@@ -36,7 +35,7 @@ class Resolver
   end
 
   def flush
-    File::open(@file, 'w') {|fd| YAML.dump(self, fd) }
+    File::open(@file, 'w') {|fd| YAML.dump(@obj, fd) }
   end
 
   def close
@@ -44,10 +43,12 @@ class Resolver
   end
 
   def run
+    run_attributes
     self.open
   end
 
   def shutdown
+    shutdown_attributes
     close
   end
 end

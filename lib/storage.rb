@@ -1,3 +1,5 @@
+# $Id$
+
 #
 # store peer status permernently
 #
@@ -35,10 +37,12 @@ module Storage
     end
 
     def run
+      run_attributes
       open
     end
 
     def shutdown
+      shutdown_attributes
       close
     end
   end

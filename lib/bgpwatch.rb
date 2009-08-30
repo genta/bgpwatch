@@ -2,16 +2,15 @@
 # $Id$
 
 require 'rubygems'
-require 'pp'
 require 'metaid'
-require 'ruby-debug'
+require 'pp'
 
 require 'modules'
-require 'peerstatus'
 require 'notifier'
 require 'watcher'
 require 'storage'
 require 'resolver'
+require 'peerstatus'
 
 
 #
@@ -19,8 +18,34 @@ require 'resolver'
 #
 class BGPWatch
   extend Attributes
-  attributes :notifier, :watcher
+  attributes :notifier, :watcher, :storage, :resolver, :pidfile
   include Runnable
+
+  # start watching.
+  # returns: never return.
+  def run
+    daemonize do
+      run_attributes
+
+      loop do
+        if (result = check()) then
+          notify(result)
+        end
+        sleep 60
+      end
+    end
+  end
+
+  def shutdown
+    shutdown_attributes
+    begin
+      File.unlink @pidfile if !@pidfile.nil? and test(?e, @pidfile)
+    rescue SystemCallError => e
+    end
+    exit! 0
+  end
+
+  private
 
   # checker method.
   # returns:
@@ -37,27 +62,6 @@ class BGPWatch
     msg.each {|message| @notifier.notify(message) }
   end
 
-  # start watching.
-  # returns: never return.
-  def run
-    daemonize do
-      [@notifier, @watcher].each {|process| process.run } # XXX
-
-      loop do
-        if (result = check()) then
-          notify(result)
-        end
-        sleep 60
-      end
-    end
-  end
-
-  def shutdown
-    [@notifier, @watcher].each {|process| process.shutdown } # XXX
-    exit! 0
-  end
-
-  private
   # daemonize process and execute given block.
   def daemonize(foreground = false)
     ['SIGINT', 'SIGTERM', 'SIGHUP'].each do |sig|
@@ -66,12 +70,13 @@ class BGPWatch
     return yield if $DEBUG || foreground
     Process.fork do
       Process.setsid
-      Dir.chdir "/" 
-      File.open("/dev/null") {|f|
-        STDIN.reopen  f
-        STDOUT.reopen f
-        STDERR.reopen f
-      }   
+      Dir.chdir '/' 
+      File.open('/dev/null', 'r+') do |fd|
+        STDIN.reopen fd
+        STDOUT.reopen fd
+        STDERR.reopen fd
+      end
+      File.open(@pidfile, 'w') {|fd| fd.puts Process.pid } if !@pidfile.nil?
       yield
     end 
     exit! 0

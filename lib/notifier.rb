@@ -1,6 +1,5 @@
 #!/usr/local/bin/ruby
 require 'rubygems'
-require 'pp'
 require 'net/irc'
 require 'kconv'
 
@@ -45,7 +44,7 @@ module Notifier
     end
 
     def on_privmsg(m)
-      channel = m[0]
+      channel, message = m
     end
   end # IRCClient::Client
   
@@ -94,22 +93,3 @@ module Notifier
     end
   end # Notifier::IRCClient
 end # Notifier
-__END__
-
-
-class MyNotifier < Notifier::IRCClient
-  server 'irc6.ii-okinawa.ne.jp'
-  port 6667
-  nick 'peerbot'
-  realname 'IHA *ihanetbot* genta (http://www.ihanet.info/)'
-  channel '#mera'
-  charcode Kconv::JIS # Kconv::AUTO, Kconv::UTF8, Kconv::SJIS, etc.
-end
-
-notifier = MyNotifier.new
-notifier.run
-
-loop do
-  notifier.notify("Hello, world! from #{Time.now}")
-  sleep(5)
-end

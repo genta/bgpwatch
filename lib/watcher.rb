@@ -1,3 +1,4 @@
+# $Id$
 require 'net/telnet'
 
 #
@@ -5,12 +6,52 @@ require 'net/telnet'
 # 
 module Watcher
   #
+  # Basic class of Watcher
+  # 
+  class BasicWatcher
+    include Runnable
+    attr_accessor :owner
+
+    # check events.
+    # retruns:
+    #   Array of message (If some errors)
+    #   nil (If there is no trouble)
+    def check
+      last = storage.current
+      result = get_peers
+      storage.current = result
+      storage.flush
+
+      diff = result.diff(last)
+      if !diff.empty? then
+        return diff.map {|entry|
+          nick = resolver[entry.asnum] 
+          if nick then nick = " a.k.a. #{nick}" end
+          "Peer status has been changed: " +
+            "#{last[entry.ipaddr].status} -> #{entry.status} " +
+            "(#{entry.ipaddr}, AS#{entry.asnum}#{nick})"
+        }
+      end
+      return nil
+    end
+
+    def get_peers
+      raise RuntimeError, "Please override me in subclass of Watcher"
+    end
+
+    private
+    def storage; @owner.storage; end
+    def resolver; @owner.resolver; end
+  end # Watcher::BasicWatcher
+
+
+  class VTY; end
+  #
   # connect to Quagga/Zebra vty, and fetch peer status
   #
-  class Quagga
+  class VTY::Quagga < BasicWatcher
     extend Attributes
     attributes :server, :user, :password, :enable_password
-    include Runnable
 
     attr :vty
 
@@ -69,52 +110,5 @@ module Watcher
 
       return result
     end
-  end # Watcher::Quagga
-
-  #
-  # Manager class of Watcher.
-  #
-  class Manager
-    extend Attributes
-    attributes :watcher, :storage, :resolver
-    include Runnable
-
-    # check events.
-    # retruns:
-    #   Array of message (If some errors)
-    #   nil (If there is no trouble)
-    def check
-      last = @storage.current
-      result = get_peers
-      @storage.current = result
-      @storage.flush
-
-      diff = result.diff(last)
-      if !diff.empty? then
-        return diff.map {|entry|
-          nick = @resolver[entry.asnum] 
-          if nick then nick = " a.k.a. #{nick}" end
-          "Peer status has been changed: " +
-            "#{last[entry.ipaddr].status} -> #{entry.status} " +
-            "(#{entry.ipaddr}, AS#{entry.asnum}#{nick})"
-        }
-      end
-      return nil
-    end
-
-    def run
-      [@watcher, @storage, @resolver].each {|mod| mod.run } # XXX
-    end
-
-    def shutdown
-      [@watcher, @storage, @resolver].each {|mod| mod.shutdown } # XXX
-    end
-
-    private
-    # get 'show ipv6 bgp' result.
-    # returns: Array
-    def get_peers
-      @watcher.get_peers
-    end
-  end
+  end # Watcher::VTY::Quagga
 end # Watcher

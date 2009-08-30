@@ -1,10 +1,8 @@
 #!/usr/local/bin/ruby
+# $Id$
 
 class PeerStatus < Hash
   Entry = Struct.new('PeerStatus', :ipaddr, :asnum, :status, :since_last_event)
-
-  def initialize
-  end
 
   def push(entry)
     self[entry[:ipaddr]] = entry
@@ -39,7 +37,10 @@ class PeerStatus < Hash
     end
   end
 end
-__END__
+
+
+
+if __FILE__ == $0 then
 
 peers = PeerStatus.new
 others = PeerStatus.new
@@ -55,3 +56,5 @@ others <<
   PeerStatus::Entry.new('fe80::10:1', 64555, 'Up')
 
 peers.diff(others)
+
+end

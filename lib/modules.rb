@@ -52,7 +52,11 @@ module Runnable
   def send_attributes(*message)
     method, *args = message
     self.class.attributes.each do |name, obj|
-      obj.send(*message) if obj.respond_to? method
+      if obj.is_a?(Array) then
+        obj.each {|o| o.send(*message) if o.respond_to? method }
+      else
+        obj.send(*message) if obj.respond_to? method
+      end
     end
   end
 

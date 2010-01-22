@@ -3,6 +3,7 @@
 require 'rubygems'
 require 'net/irc'
 require 'kconv'
+require 'thread'
 
 require 'modules'
 require 'monkey-patch/net-irc-client'
@@ -126,4 +127,33 @@ module Notifier
       @owner.resolver
     end
   end # Notifier::IRCClient
+
+  #
+  # Twitter Client. Client class of Notifier
+  #
+  class TwitterNotifier < BasicNotifier
+    extend Attributes
+    attributes :consumer_key, :consumer_secret
+    attributes :access_token, :access_token_secret
+    attributes :hash_tag
+    attr_reader :twitter, :auth
+    require 'twitter'
+
+    def initialize
+      init_attributes
+      @auth = Twitter::OAuth.new(@consumer_key, @consumer_secret)
+      @auth.authorize_from_access(@access_token, @access_token_secret)
+      @twitter = Twitter::Base.new(@auth)
+      super
+    end
+
+    def notify(msg)
+      msg += ' ' + @hash_tag unless @hash_tag.nil?
+      begin
+        @twitter.update(msg)
+      rescue => e
+        # log error
+      end
+    end
+  end # Notifier::TwitterClient
 end # Notifier

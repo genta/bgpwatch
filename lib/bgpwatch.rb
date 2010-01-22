@@ -59,7 +59,13 @@ class BGPWatch
   # receives: Array of messages.
   # returns: nil
   def notify(msg)
-    msg.each {|message| @notifier.notify(message) }
+    msg.each do |message|
+      if @notifier.is_a?(Array) then
+        @notifier.each {|o| o.notify(message) }
+      else
+        @notifier.notify(message)
+      end
+    end
   end
 
   # daemonize process and execute given block.

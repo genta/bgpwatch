@@ -14,6 +14,14 @@ class MyNotifier < Notifier::IRCClient
   charcode Kconv::JIS # Kconv::AUTO, Kconv::UTF8, Kconv::SJIS, etc.
 end
 
+class TwitterNotifier < Notifier::TwitterNotifier
+  consumer_key 'your_consumer_key_here'
+  consumer_secret 'your_consumer_secret_here'
+  access_token 'your_access_token_here'
+  access_token_secret 'your_access_token_secret_here'
+  hash_tag '#YourHashTag'
+end
+
 class MyWatcher < Watcher::VTY::Quagga
   server 'localhost'
   user 'root'
@@ -31,7 +39,7 @@ class MyResolver < Resolver
 end
 
 class MyBGPWatch < BGPWatch
-  notifier MyNotifier
+  notifier [MyNotifier, TwitterNotifier]
   watcher MyWatcher
   storage MyStorage
   resolver MyResolver
